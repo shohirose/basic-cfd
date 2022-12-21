@@ -3,7 +3,6 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <Eigen/Dense>
 
 namespace cfd {
 
@@ -40,18 +39,25 @@ class AdvectionEquationSolver1d {
   AdvectionEquationSolver1d& operator=(AdvectionEquationSolver1d&&) = default;
 
   /**
-   * @brief Computes q at time step @f$ n + 1 @f$
+   * @brief Computes q at the next time step
    *
-   * @tparam L
-   * @tparam R
-   * @param q Variable at time step @f$ n @f$
-   * @return Eigen::DenseBase<L>
+   * @tparam Derived
+   * @param q Variable at the next time step
+   * @return Eigen::VectorXd
    */
-  template <typename T>
-  Eigen::VectorXd solve(const Eigen::DenseBase<T>& q) const noexcept {
-    const Eigen::VectorXd q_new = D_ * q;
+  template <typename Derived>
+  Eigen::VectorXd solve(const Eigen::MatrixBase<Derived>& q) const noexcept {
+    Eigen::VectorXd q_new =  D_ * q;
+    // Copy boundary values
+    q_new.head(1) = q.head(1);
+    q_new.tail(1) = q.tail(1);
     return q_new;
   }
+
+  double dt() const noexcept { return dt_; }
+  double dx() const noexcept { return dx_; }
+  double c() const noexcept { return c_; }
+  int nx() const noexcept { return nx_; }
 
  private:
   double dt_;                      ///> Delta time

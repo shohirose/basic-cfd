@@ -18,19 +18,22 @@ FetchContent_MakeAvailable(Eigen)
 project(basic_cfd CXX)
 
 add_library(cfd
-    src/ftcs_scheme.cpp
-    src/lax_scheme.cpp
-    src/lax_wendroff_scheme.cpp
-    src/upwind_scheme.cpp
+  INTERFACE
+    include/ftcs_scheme.hpp
+    include/lax_scheme.hpp
+    include/lax_wendroff_scheme.hpp
+    include/upwind_scheme.hpp
+    include/advection_equation_solver_1d.hpp
   )
-target_include_directories(cfd PUBLIC include/)
-target_link_libraries(cfd PUBLIC Eigen3::Eigen)
-target_compile_features(cfd PUBLIC cxx_std_17)
+target_include_directories(cfd INTERFACE include/)
+target_link_libraries(cfd INTERFACE Eigen3::Eigen)
+target_compile_features(cfd INTERFACE cxx_std_17)
 target_compile_options(cfd
-  PUBLIC
-    $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Wpedantic -march=native>
-    $<$<CXX_COMPILER_ID:MSVC>:/W3 /arch:AVX512>
+  INTERFACE
+    $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Wpedantic>
+    $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -Wpedantic>
+    $<$<CXX_COMPILER_ID:MSVC>:/W3>
   )
 
-add_executable(advection_1d examples/advection_1d.cpp)
+add_executable(advection_1d src/advection_1d.cpp)
 target_link_libraries(advection_1d PRIVATE cfd)

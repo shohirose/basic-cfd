@@ -1,4 +1,8 @@
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+
+namespace fs = std::filesystem;
 
 #include "advection_equation_solver_1d.hpp"
 #include "ftcs_scheme.hpp"
@@ -30,16 +34,29 @@ class Simulator {
    *
    * @param nt Number of time steps
    * @param q0 Initial condition
+   * @param dir Directory to output results
    */
   template <typename T>
-  void run(int nt, const Eigen::DenseBase<T>& q0) noexcept {
-    std::cout << "[0] " << q0.reshaped().transpose() << std::endl;
+  void run(int nt, const Eigen::MatrixBase<T>& q0,
+           const fs::path& dir) const noexcept {
+    fs::create_directory(dir);
+    {
+      std::ofstream file(dir / fs::path("q0.txt"));
+      file << q0 << std::endl;
+    }
+
     Eigen::VectorXd q_old = q0;
+    const auto nx = solver_.nx();
     for (int i = 1; i <= nt; ++i) {
-      Eigen::VectorXd q_new = solver_.solve(q_old);
+      const Eigen::VectorXd q_new = solver_.solve(q_old);
       q_old = q_new;
-      std::cout << "[" << i << "] " << q_new.reshaped().transpose()
-                << std::endl;
+      
+      {
+        const std::string filename =
+            std::string("q") + std::to_string(i) + std::string(".txt");
+        std::ofstream file(dir / fs::path(filename));
+        file << q_new << std::endl;
+      }
     }
   }
 
@@ -64,30 +81,24 @@ int main(int argc, char** argv) {
     q0[i] = 0;
   }
 
-  std::cout << q0.reshaped().transpose() << std::endl;
-
-  std::cout << "------ FTCS scheme ------" << std::endl;
   {
     Simulator<FtcsSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0);
+    simulator.run(nt, q0, "ftcs");
   }
 
-  std::cout << "------ Lax scheme ------" << std::endl;
   {
     Simulator<LaxSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0);
+    simulator.run(nt, q0, "lax");
   }
 
-  std::cout << "------ Lax-Wendroff scheme ------" << std::endl;
   {
     Simulator<LaxWendroffSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0);
+    simulator.run(nt, q0, "lax-wendroff");
   }
 
-  std::cout << "------ Upwind scheme ------" << std::endl;
   {
     Simulator<UpwindSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0);
+    simulator.run(nt, q0, "upwind");
   }
 
   return EXIT_SUCCESS;
