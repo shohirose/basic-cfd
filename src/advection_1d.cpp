@@ -22,6 +22,14 @@ class Simulator {
  public:
   Simulator() = default;
 
+  /**
+   * @brief Construct a new Simulator object
+   * 
+   * @param dt Delta time
+   * @param dx Delta x for grids
+   * @param c Velocity
+   * @param nx Number of grid points
+   */
   Simulator(double dt, double dx, double c, int nx) : solver_{dt, dx, c, nx} {}
 
   Simulator(const Simulator&) = default;
