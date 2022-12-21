@@ -1,19 +1,22 @@
 cmake_minimum_required(VERSION 3.13)
 
+# ----------------------------- Eigen library ----------------------------------
 include(FetchContent)
 FetchContent_Declare(
   Eigen
   URL https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip
   )
 set(EIGEN_BUILD_DOC OFF FORCE)
-# note: To disable eigen tests,
-# you should put this code in a add_subdirectory to avoid to change
-# BUILD_TESTING for your own project too since variables are directory
-# scoped
-set(BUILD_TESTING OFF FORCE)
+#set(BUILD_TESTING OFF FORCE)
 set(EIGEN_BUILD_PKGCONFIG OFF FORCE)
-
 FetchContent_MakeAvailable(Eigen)
+
+# ------------------------------ fmt library -----------------------------------
+FetchContent_Declare(
+  fmt
+  URL https://github.com/fmtlib/fmt/releases/download/9.1.0/fmt-9.1.0.zip
+  )
+FetchContent_MakeAvailable(fmt)
 
 project(basic_cfd CXX)
 
@@ -36,4 +39,8 @@ target_compile_options(cfd
   )
 
 add_executable(advection_1d src/advection_1d.cpp)
-target_link_libraries(advection_1d PRIVATE cfd)
+target_link_libraries(advection_1d
+  PRIVATE
+    cfd
+    fmt::fmt  
+  )

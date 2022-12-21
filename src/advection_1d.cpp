@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
-#include <iostream>
+#include <string>
+#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
@@ -50,10 +51,9 @@ class Simulator {
     for (int i = 1; i <= nt; ++i) {
       const Eigen::VectorXd q_new = solver_.solve(q_old);
       q_old = q_new;
-      
+
       {
-        const std::string filename =
-            std::string("q") + std::to_string(i) + std::string(".txt");
+        const std::string filename = fmt::format("q{}.txt", i);
         std::ofstream file(dir / fs::path(filename));
         file << q_new << std::endl;
       }
@@ -81,6 +81,7 @@ int main(int argc, char** argv) {
     q0[i] = 0;
   }
 
+  // Solve
   {
     Simulator<FtcsSolver> simulator(dt, dx, c, nx);
     simulator.run(nt, q0, "ftcs");
