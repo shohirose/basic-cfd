@@ -22,20 +22,22 @@ class AdvectionEquationSolver1d {
   AdvectionEquationSolver1d() = default;
 
   /**
-   * @brief Construct a new Ftcs Solver 1d object
+   * @brief Construct a new FTCS solver 1d object
    *
    * @param dt Delta time
    * @param dx Distances between neighboring grid points
    * @param c Velocity
    * @param nx Number of grid points
+   * @param nt Number of time steps
    * @param dir Directory to output results
    */
-  AdvectionEquationSolver1d(double dt, double dx, double c, int nx,
+  AdvectionEquationSolver1d(double dt, double dx, double c, int nx, int nt,
                             const std::filesystem::path& dir)
       : dt_{dt},
         dx_{dx},
         c_{c},
         nx_{nx},
+        nt_{nt},
         dir_{dir},
         D_{Scheme::eval(dt, dx, c, nx)} {
     std::filesystem::create_directory(dir);
@@ -52,18 +54,16 @@ class AdvectionEquationSolver1d {
    * @brief Solve the problem
    *
    * @tparam Derived
-   * @param n_timesteps Number of time steps
    * @param q0 Initial condition
    */
   template <typename Derived>
-  void solve(int n_timesteps,
-             const Eigen::MatrixBase<Derived>& q0) const noexcept {
+  void solve(const Eigen::MatrixBase<Derived>& q0) const noexcept {
     print(q0, 0);
 
     Eigen::VectorXd q_old = q0;
     Eigen::VectorXd q_new(nx_);
 
-    for (int i = 0; i < n_timesteps; ++i) {
+    for (int i = 0; i < nt_; ++i) {
       // Solve the equation
       q_new = D_ * q_old;
 
@@ -95,6 +95,7 @@ class AdvectionEquationSolver1d {
   double dx_;                      ///> Distance between neighboring grid points
   double c_;                       ///> Advection velocity
   int nx_;                         ///> Number of grids
+  int nt_;                         ///> Number of time steps
   std::filesystem::path dir_;      ///> Directory to output results
   Eigen::SparseMatrix<double> D_;  ///> Differential operator
 };
