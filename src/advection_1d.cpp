@@ -42,27 +42,23 @@ int main(int argc, char** argv) {
 
   // Solve
   {
-    FtcsSolver solver(dt, dx, c, nx, nt,
-                      FileWriter("q", "FTCS", EvenTimestepChecker()));
+    FtcsSolver solver(dt, dx, c, nx, nt, FileWriter("q", "FTCS"));
     solver.solve(q0);
   }
 
   {
-    LaxSolver solver(dt, dx, c, nx, nt,
-                     FileWriter("q", "Lax", EvenTimestepChecker()));
+    LaxSolver solver(dt, dx, c, nx, nt, FileWriter("q", "Lax"));
     solver.solve(q0);
   }
 
   {
-    LaxWendroffSolver solver(
-        dt, dx, c, nx, nt,
-        FileWriter("q", "Lax-Wendroff", EvenTimestepChecker()));
+    LaxWendroffSolver solver(dt, dx, c, nx, nt,
+                             FileWriter("q", "Lax-Wendroff"));
     solver.solve(q0);
   }
 
   {
-    UpwindSolver solver(dt, dx, c, nx, nt,
-                        FileWriter("q", "Upwind", EvenTimestepChecker()));
+    UpwindSolver solver(dt, dx, c, nx, nt, FileWriter("q", "Upwind"));
     solver.solve(q0);
   }
 

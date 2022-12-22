@@ -23,6 +23,17 @@ class FileWriter {
    *
    * @param prefix File prefix
    * @param directory Directory to output
+   */
+  FileWriter(const std::string& prefix, const std::filesystem::path& directory)
+      : prefix_{prefix}, directory_{directory}, checker_{} {
+    std::filesystem::create_directory(directory);
+  }
+
+  /**
+   * @brief Construct a new File Writer object
+   *
+   * @param prefix File prefix
+   * @param directory Directory to output
    * @param checker Timestep checker
    */
   FileWriter(const std::string& prefix, const std::filesystem::path& directory,
