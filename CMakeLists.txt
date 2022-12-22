@@ -22,10 +22,10 @@ project(basic_cfd CXX)
 
 add_library(cfd
   INTERFACE
-    include/ftcs_scheme.hpp
-    include/lax_scheme.hpp
-    include/lax_wendroff_scheme.hpp
-    include/upwind_scheme.hpp
+    include/ftcs_scheme_1d.hpp
+    include/lax_scheme_1d.hpp
+    include/lax_wendroff_scheme_1d.hpp
+    include/upwind_scheme_1d.hpp
     include/advection_equation_solver_1d.hpp
     include/file_writer.hpp
   )

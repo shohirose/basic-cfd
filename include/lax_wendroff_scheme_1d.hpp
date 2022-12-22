@@ -1,17 +1,16 @@
-#ifndef CFD_UPWIND_SCHEME_HPP
-#define CFD_UPWIND_SCHEME_HPP
+#ifndef CFD_LAX_WENDROFF_SCHEME_1D_HPP
+#define CFD_LAX_WENDROFF_SCHEME_1D_HPP
 
 #include <Eigen/Sparse>
-#include <cmath>
 #include <vector>
 
 namespace cfd {
 
 /**
- * @brief Upwind scheme
+ * @brief Lax-Wendroff scheme
  *
  */
-class UpwindScheme {
+class LaxWendroffScheme1d {
  public:
   /**
    * @brief Compute differential operator
@@ -21,15 +20,15 @@ class UpwindScheme {
    * @param c Velocity
    * @param nx Number of grid points
    *
-   * Upwind scheme for 1-D advection equation
+   * Lax-Wendroff scheme for 1-D advection equation
    * @f[
    * \frac{\partial q}{\partial t} + c \frac{\partial q}{\partial x} = 0
    * @f]
    * can be expressed by
    * @f[
-   * q_j^{n+1} = \frac{1}{2} (| \rho | - \rho) q_{j+1}^n +
-   *             (1 - | \rho |) q_j^n +
-   *             \frac{1}{2} (| \rho | + \rho) q_{j-1}^n
+   * q_j^{n+1} = \frac{1}{2} \rho (\rho - 1) q_{j+1}^n +
+   *             (1 - \rho^2) q_j^n +
+   *             \frac{1}{2} \rho (\rho + 1) q_{j-1}^n
    * @f]
    * where @f$ \rho = c \Delta t / \Delta x @f$.
    */
@@ -38,10 +37,9 @@ class UpwindScheme {
     using triplet = Eigen::Triplet<double>;
     std::vector<triplet> coeffs;
     const auto a = dt * c / dx;
-    const auto abs_a = std::abs(a);
-    const auto a1 = 0.5 * (a + std::abs(a));
-    const auto a2 = 1 - std::abs(a);
-    const auto a3 = -0.5 * (a - std::abs(a));
+    const auto a1 = 0.5 * a * (a + 1);
+    const auto a2 = 1 - a * a;
+    const auto a3 = 0.5 * a * (a - 1);
     coeffs.reserve(3 * nx);
     for (int i = 1; i < nx - 1; ++i) {
       coeffs.emplace_back(i, i - 1, a1);
@@ -56,4 +54,4 @@ class UpwindScheme {
 
 }  // namespace cfd
 
-#endif  // CFD_UPWIND_SCHEME_HPP
+#endif  // CFD_LAX_WENDROFF_SCHEME_1D_HPP
