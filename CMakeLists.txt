@@ -27,6 +27,7 @@ add_library(cfd
     include/lax_wendroff_scheme.hpp
     include/upwind_scheme.hpp
     include/advection_equation_solver_1d.hpp
+    include/file_writer.hpp
   )
 target_include_directories(cfd INTERFACE include/)
 target_link_libraries(cfd

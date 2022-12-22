@@ -1,13 +1,8 @@
 #ifndef CFD_ADVECTION_EQUATION_SOLVER_1D_HPP
 #define CFD_ADVECTION_EQUATION_SOLVER_1D_HPP
 
-#include <fmt/format.h>
-
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <filesystem>
-#include <fstream>
-#include <string>
 
 namespace cfd {
 
@@ -15,8 +10,9 @@ namespace cfd {
  * @brief Solver for 1D advection equation.
  *
  * @tparam Scheme Spacial discretization scheme
+ * @tparam Writer Data writer
  */
-template <typename Scheme>
+template <typename Scheme, typename Writer>
 class AdvectionEquationSolver1d {
  public:
   AdvectionEquationSolver1d() = default;
@@ -29,19 +25,17 @@ class AdvectionEquationSolver1d {
    * @param c Velocity
    * @param nx Number of grid points
    * @param nt Number of time steps
-   * @param dir Directory to output results
+   * @param writer Data writer
    */
   AdvectionEquationSolver1d(double dt, double dx, double c, int nx, int nt,
-                            const std::filesystem::path& dir)
+                            const Writer& writer)
       : dt_{dt},
         dx_{dx},
         c_{c},
         nx_{nx},
         nt_{nt},
-        dir_{dir},
-        D_{Scheme::eval(dt, dx, c, nx)} {
-    std::filesystem::create_directory(dir);
-  }
+        writer_{writer},
+        D_{Scheme::eval(dt, dx, c, nx)} {}
 
   AdvectionEquationSolver1d(const AdvectionEquationSolver1d&) = default;
   AdvectionEquationSolver1d(AdvectionEquationSolver1d&&) = default;
@@ -58,7 +52,7 @@ class AdvectionEquationSolver1d {
    */
   template <typename Derived>
   void solve(const Eigen::MatrixBase<Derived>& q0) const noexcept {
-    print(q0, 0);
+    writer_(q0, 0);
 
     Eigen::VectorXd q_old = q0;
     Eigen::VectorXd q_new(nx_);
@@ -73,7 +67,7 @@ class AdvectionEquationSolver1d {
 
       q_old = q_new;
 
-      print(q_new, i + 1);
+      writer_(q_new, i + 1);
     }
   }
 
@@ -83,20 +77,12 @@ class AdvectionEquationSolver1d {
   int nx() const noexcept { return nx_; }
 
  private:
-  template <typename Derived>
-  void print(const Eigen::MatrixBase<Derived>& q, int i) const noexcept {
-    if (i % 2 != 0) return;
-    const std::string filename = fmt::format("q{}.txt", i);
-    std::ofstream file(dir_ / fs::path(filename));
-    file << q << std::endl;
-  }
-
   double dt_;                      ///> Delta time
   double dx_;                      ///> Distance between neighboring grid points
   double c_;                       ///> Advection velocity
   int nx_;                         ///> Number of grids
   int nt_;                         ///> Number of time steps
-  std::filesystem::path dir_;      ///> Directory to output results
+  Writer writer_;                  ///> Data writer
   Eigen::SparseMatrix<double> D_;  ///> Differential operator
 };
 

@@ -1,6 +1,5 @@
-#include <filesystem>
-
 #include "advection_equation_solver_1d.hpp"
+#include "file_writer.hpp"
 #include "ftcs_scheme.hpp"
 #include "lax_scheme.hpp"
 #include "lax_wendroff_scheme.hpp"
@@ -8,11 +7,21 @@
 
 namespace fs = std::filesystem;
 
-using FtcsSolver = cfd::AdvectionEquationSolver1d<cfd::FtcsScheme>;
-using LaxSolver = cfd::AdvectionEquationSolver1d<cfd::LaxScheme>;
+struct EvenTimestepChecker {
+  bool operator()(int i) const noexcept { return i % 2 == 0; }
+};
+
+using FileWriter = cfd::FileWriter<EvenTimestepChecker>;
+
+using FtcsSolver = cfd::AdvectionEquationSolver1d<cfd::FtcsScheme, FileWriter>;
+
+using LaxSolver = cfd::AdvectionEquationSolver1d<cfd::LaxScheme, FileWriter>;
+
 using LaxWendroffSolver =
-    cfd::AdvectionEquationSolver1d<cfd::LaxWendroffScheme>;
-using UpwindSolver = cfd::AdvectionEquationSolver1d<cfd::UpwindScheme>;
+    cfd::AdvectionEquationSolver1d<cfd::LaxWendroffScheme, FileWriter>;
+
+using UpwindSolver =
+    cfd::AdvectionEquationSolver1d<cfd::UpwindScheme, FileWriter>;
 
 int main(int argc, char** argv) {
   // Parameters
@@ -33,22 +42,27 @@ int main(int argc, char** argv) {
 
   // Solve
   {
-    FtcsSolver solver(dt, dx, c, nx, nt, fs::path("ftcs"));
+    FtcsSolver solver(dt, dx, c, nx, nt,
+                      FileWriter("q", "FTCS", EvenTimestepChecker()));
     solver.solve(q0);
   }
 
   {
-    LaxSolver solver(dt, dx, c, nx, nt, fs::path("lax"));
+    LaxSolver solver(dt, dx, c, nx, nt,
+                     FileWriter("q", "Lax", EvenTimestepChecker()));
     solver.solve(q0);
   }
 
   {
-    LaxWendroffSolver solver(dt, dx, c, nx, nt, fs::path("lax-wendroff"));
+    LaxWendroffSolver solver(
+        dt, dx, c, nx, nt,
+        FileWriter("q", "Lax-Wendroff", EvenTimestepChecker()));
     solver.solve(q0);
   }
 
   {
-    UpwindSolver solver(dt, dx, c, nx, nt, fs::path("upwind"));
+    UpwindSolver solver(dt, dx, c, nx, nt,
+                        FileWriter("q", "Upwind", EvenTimestepChecker()));
     solver.solve(q0);
   }
 
