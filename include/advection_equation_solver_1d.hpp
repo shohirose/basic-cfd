@@ -3,15 +3,16 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
+#include <filesystem>
 
 namespace cfd {
 
 /**
  * @brief Solver for 1D advection equation.
  *
- * @tparam SpacialDiscretizationPolicy Policy for spacial discretization
+ * @tparam Scheme Spacial discretization scheme
  */
-template <typename SpacialDiscretizationPolicy>
+template <typename Scheme>
 class AdvectionEquationSolver1d {
  public:
   AdvectionEquationSolver1d() = default;
@@ -23,13 +24,16 @@ class AdvectionEquationSolver1d {
    * @param dx Distances between neighboring grid points
    * @param c Velocity
    * @param nx Number of grid points
+   * @param dir Directory to output results
    */
-  AdvectionEquationSolver1d(double dt, double dx, double c, int nx)
+  AdvectionEquationSolver1d(double dt, double dx, double c, int nx,
+                            const std::filesystem::path& dir)
       : dt_{dt},
         dx_{dx},
         c_{c},
         nx_{nx},
-        D_{SpacialDiscretizationPolicy::eval(dt, dx, c, nx)} {}
+        dir_{dir},
+        D_{Scheme::eval(dt, dx, c, nx)} {}
 
   AdvectionEquationSolver1d(const AdvectionEquationSolver1d&) = default;
   AdvectionEquationSolver1d(AdvectionEquationSolver1d&&) = default;
@@ -39,19 +43,32 @@ class AdvectionEquationSolver1d {
   AdvectionEquationSolver1d& operator=(AdvectionEquationSolver1d&&) = default;
 
   /**
-   * @brief Computes q at the next time step
+   * @brief Solve the problem
    *
    * @tparam Derived
-   * @param q Variable at the next time step
-   * @return Eigen::VectorXd
+   * @param n_timesteps Number of time steps
+   * @param q0 Initial condition
    */
   template <typename Derived>
-  Eigen::VectorXd solve(const Eigen::MatrixBase<Derived>& q) const noexcept {
-    Eigen::VectorXd q_new =  D_ * q;
-    // Copy boundary values
-    q_new.head(1) = q.head(1);
-    q_new.tail(1) = q.tail(1);
-    return q_new;
+  void solve(int n_timesteps,
+             const Eigen::MatrixBase<Derived>& q0) const noexcept {
+    print(q0, 0);
+
+    Eigen::VectorXd q_old = q0;
+    Eigen::VectorXd q_new(nx_);
+
+    for (int i = 0; i < n_timesteps; ++i) {
+      // Solve the equation
+      q_new = D_ * q_old;
+
+      // Copy boundary values
+      q_new.head(1) = q_old.head(1);
+      q_new.tail(1) = q_old.tail(1);
+
+      q_old = q_new;
+
+      print(q_new, i + 1);
+    }
   }
 
   double dt() const noexcept { return dt_; }
@@ -60,10 +77,18 @@ class AdvectionEquationSolver1d {
   int nx() const noexcept { return nx_; }
 
  private:
+  template <typename Derived>
+  void print(const Eigen::MatrixBase<Derived>& q, int i) const noexcept {
+    const std::string filename = fmt::format("q{}.txt", i);
+    std::ofstream file(dir_ / fs::path(filename));
+    file << q << std::endl;
+  }
+
   double dt_;                      ///> Delta time
   double dx_;                      ///> Distance between neighboring grid points
   double c_;                       ///> Advection velocity
   int nx_;                         ///> Number of grids
+  fs::path dir_;                   ///> Directory to output results
   Eigen::SparseMatrix<double> D_;  ///> Differential operator
 };
 

@@ -1,7 +1,8 @@
+#include <fmt/format.h>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
-#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 
@@ -17,97 +18,42 @@ using LaxWendroffSolver =
     cfd::AdvectionEquationSolver1d<cfd::LaxWendroffScheme>;
 using UpwindSolver = cfd::AdvectionEquationSolver1d<cfd::UpwindScheme>;
 
-template <typename Solver>
-class Simulator {
- public:
-  Simulator() = default;
-
-  /**
-   * @brief Construct a new Simulator object
-   * 
-   * @param dt Delta time
-   * @param dx Delta x for grids
-   * @param c Velocity
-   * @param nx Number of grid points
-   */
-  Simulator(double dt, double dx, double c, int nx) : solver_{dt, dx, c, nx} {}
-
-  Simulator(const Simulator&) = default;
-  Simulator(Simulator&&) = default;
-
-  Simulator& operator=(const Simulator&) = default;
-  Simulator& operator=(Simulator&&) = default;
-
-  /**
-   * @brief Run a simulation
-   *
-   * @param nt Number of time steps
-   * @param q0 Initial condition
-   * @param dir Directory to output results
-   */
-  template <typename T>
-  void run(int nt, const Eigen::MatrixBase<T>& q0,
-           const fs::path& dir) const noexcept {
-    fs::create_directory(dir);
-    {
-      std::ofstream file(dir / fs::path("q0.txt"));
-      file << q0 << std::endl;
-    }
-
-    Eigen::VectorXd q_old = q0;
-    const auto nx = solver_.nx();
-    for (int i = 1; i <= nt; ++i) {
-      const Eigen::VectorXd q_new = solver_.solve(q_old);
-      q_old = q_new;
-
-      {
-        const std::string filename = fmt::format("q{}.txt", i);
-        std::ofstream file(dir / fs::path(filename));
-        file << q_new << std::endl;
-      }
-    }
-  }
-
- private:
-  Solver solver_;
-};
-
 int main(int argc, char** argv) {
   // Parameters
-  double dt = 0.05;  // Time step length
-  double dx = 0.1;   // Grid size
-  double c = 1;      // Velocity
-  int nx = 21;       // Number of grids
-  int nt = 6;        // Number of time steps
+  double dt = 0.05;     // Time step length
+  double dx = 0.1;      // Grid size
+  double c = 1;         // Velocity
+  int n_grids = 21;     // Number of grids
+  int n_timesteps = 6;  // Number of time steps
 
   // Initial condition
-  Eigen::VectorXd q0(nx);
-  for (int i = 0; i < nx / 2; ++i) {
+  Eigen::VectorXd q0(n_grids);
+  for (int i = 0; i < n_grids / 2; ++i) {
     q0[i] = 1;
   }
-  for (int i = nx / 2; i < nx; ++i) {
+  for (int i = n_grids / 2; i < n_grids; ++i) {
     q0[i] = 0;
   }
 
   // Solve
   {
-    Simulator<FtcsSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0, "ftcs");
+    FtcsSolver solver(dt, dx, c, n_grids, fs::path("ftcs"));
+    solver.solve(n_timesteps, q0);
   }
 
   {
-    Simulator<LaxSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0, "lax");
+    LaxSolver solver(dt, dx, c, n_grids, fs::path("lax"));
+    solver.solve(n_timesteps, q0);
   }
 
   {
-    Simulator<LaxWendroffSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0, "lax-wendroff");
+    LaxWendroffSolver solver(dt, dx, c, n_grids, fs::path("lax-wendroff"));
+    solver.solve(n_timesteps, q0);
   }
 
   {
-    Simulator<UpwindSolver> simulator(dt, dx, c, nx);
-    simulator.run(nt, q0, "upwind");
+    UpwindSolver solver(dt, dx, c, n_grids, fs::path("upwind"));
+    solver.solve(n_timesteps, q0);
   }
 
   return EXIT_SUCCESS;
