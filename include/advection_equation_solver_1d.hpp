@@ -37,7 +37,9 @@ class AdvectionEquationSolver1d {
         c_{c},
         nx_{nx},
         dir_{dir},
-        D_{Scheme::eval(dt, dx, c, nx)} {}
+        D_{Scheme::eval(dt, dx, c, nx)} {
+    std::filesystem::create_directory(dir);
+  }
 
   AdvectionEquationSolver1d(const AdvectionEquationSolver1d&) = default;
   AdvectionEquationSolver1d(AdvectionEquationSolver1d&&) = default;
@@ -83,6 +85,7 @@ class AdvectionEquationSolver1d {
  private:
   template <typename Derived>
   void print(const Eigen::MatrixBase<Derived>& q, int i) const noexcept {
+    if (i % 2 != 0) return;
     const std::string filename = fmt::format("q{}.txt", i);
     std::ofstream file(dir_ / fs::path(filename));
     file << q << std::endl;
