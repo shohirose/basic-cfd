@@ -29,7 +29,11 @@ add_library(cfd
     include/advection_equation_solver_1d.hpp
   )
 target_include_directories(cfd INTERFACE include/)
-target_link_libraries(cfd INTERFACE Eigen3::Eigen)
+target_link_libraries(cfd
+  INTERFACE
+    Eigen3::Eigen
+    fmt::fmt
+  )
 target_compile_features(cfd INTERFACE cxx_std_17)
 target_compile_options(cfd
   INTERFACE
@@ -41,6 +45,5 @@ target_compile_options(cfd
 add_executable(advection_1d src/advection_1d.cpp)
 target_link_libraries(advection_1d
   PRIVATE
-    cfd
-    fmt::fmt  
+    cfd    
   )

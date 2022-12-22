@@ -1,16 +1,12 @@
-#include <fmt/format.h>
-
 #include <filesystem>
-#include <fstream>
-#include <string>
-
-namespace fs = std::filesystem;
 
 #include "advection_equation_solver_1d.hpp"
 #include "ftcs_scheme.hpp"
 #include "lax_scheme.hpp"
 #include "lax_wendroff_scheme.hpp"
 #include "upwind_scheme.hpp"
+
+namespace fs = std::filesystem;
 
 using FtcsSolver = cfd::AdvectionEquationSolver1d<cfd::FtcsScheme>;
 using LaxSolver = cfd::AdvectionEquationSolver1d<cfd::LaxScheme>;

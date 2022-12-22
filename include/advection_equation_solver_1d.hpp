@@ -1,9 +1,13 @@
 #ifndef CFD_ADVECTION_EQUATION_SOLVER_1D_HPP
 #define CFD_ADVECTION_EQUATION_SOLVER_1D_HPP
 
+#include <fmt/format.h>
+
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <filesystem>
+#include <fstream>
+#include <string>
 
 namespace cfd {
 
@@ -88,7 +92,7 @@ class AdvectionEquationSolver1d {
   double dx_;                      ///> Distance between neighboring grid points
   double c_;                       ///> Advection velocity
   int nx_;                         ///> Number of grids
-  fs::path dir_;                   ///> Directory to output results
+  std::filesystem::path dir_;      ///> Directory to output results
   Eigen::SparseMatrix<double> D_;  ///> Differential operator
 };
 
