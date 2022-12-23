@@ -11,18 +11,21 @@ struct EvenTimestepChecker {
   bool operator()(int i) const noexcept { return i % 2 == 0; }
 };
 
-using FileWriter = cfd::FileWriter<EvenTimestepChecker>;
-
 using FtcsSolver =
-    cfd::AdvectionEquationSolver1d<cfd::FtcsScheme1d, FileWriter>;
+    cfd::AdvectionEquationSolver1d<cfd::FtcsScheme1d, cfd::FileWriter,
+                                   EvenTimestepChecker>;
 
-using LaxSolver = cfd::AdvectionEquationSolver1d<cfd::LaxScheme1d, FileWriter>;
+using LaxSolver =
+    cfd::AdvectionEquationSolver1d<cfd::LaxScheme1d, cfd::FileWriter,
+                                   EvenTimestepChecker>;
 
 using LaxWendroffSolver =
-    cfd::AdvectionEquationSolver1d<cfd::LaxWendroffScheme1d, FileWriter>;
+    cfd::AdvectionEquationSolver1d<cfd::LaxWendroffScheme1d, cfd::FileWriter,
+                                   EvenTimestepChecker>;
 
 using UpwindSolver =
-    cfd::AdvectionEquationSolver1d<cfd::UpwindScheme1d, FileWriter>;
+    cfd::AdvectionEquationSolver1d<cfd::UpwindScheme1d, cfd::FileWriter,
+                                   EvenTimestepChecker>;
 
 int main(int argc, char** argv) {
   // Parameters
@@ -43,23 +46,27 @@ int main(int argc, char** argv) {
 
   // Solve
   {
-    FtcsSolver solver(dt, dx, c, nx, nt, FileWriter("q", "FTCS"));
+    FtcsSolver solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "FTCS"),
+                      EvenTimestepChecker());
     solver.solve(q0);
   }
 
   {
-    LaxSolver solver(dt, dx, c, nx, nt, FileWriter("q", "Lax"));
+    LaxSolver solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Lax"),
+                     EvenTimestepChecker());
     solver.solve(q0);
   }
 
   {
     LaxWendroffSolver solver(dt, dx, c, nx, nt,
-                             FileWriter("q", "Lax-Wendroff"));
+                             cfd::FileWriter("q", "Lax-Wendroff"),
+                             EvenTimestepChecker());
     solver.solve(q0);
   }
 
   {
-    UpwindSolver solver(dt, dx, c, nx, nt, FileWriter("q", "Upwind"));
+    UpwindSolver solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Upwind"),
+                        EvenTimestepChecker());
     solver.solve(q0);
   }
 

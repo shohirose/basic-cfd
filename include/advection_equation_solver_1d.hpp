@@ -11,8 +11,9 @@ namespace cfd {
  *
  * @tparam Scheme Spacial discretization scheme
  * @tparam Writer Data writer
+ * @tparam TimestepChecker Check timesteps to write data
  */
-template <typename Scheme, typename Writer>
+template <typename Scheme, typename Writer, typename TimestepChecker>
 class AdvectionEquationSolver1d {
  public:
   AdvectionEquationSolver1d() = default;
@@ -28,13 +29,15 @@ class AdvectionEquationSolver1d {
    * @param writer Data writer
    */
   AdvectionEquationSolver1d(double dt, double dx, double c, int nx, int nt,
-                            const Writer& writer)
+                            const Writer& writer,
+                            const TimestepChecker& checker)
       : dt_{dt},
         dx_{dx},
         c_{c},
         nx_{nx},
         nt_{nt},
         writer_{writer},
+        checker_{checker},
         D_{Scheme::eval(dt, dx, c, nx)} {}
 
   AdvectionEquationSolver1d(const AdvectionEquationSolver1d&) = default;
@@ -52,7 +55,9 @@ class AdvectionEquationSolver1d {
    */
   template <typename Derived>
   void solve(const Eigen::MatrixBase<Derived>& q0) const noexcept {
-    writer_(q0, 0);
+    if (checker_(0)) {
+      writer_.write(q0, 0);
+    }
 
     Eigen::VectorXd q_old = q0;
     Eigen::VectorXd q_new(nx_);
@@ -67,7 +72,9 @@ class AdvectionEquationSolver1d {
 
       q_old = q_new;
 
-      writer_(q_new, i + 1);
+      if (checker_(i)) {
+        writer_.write(q_new, i + 1);
+      }
     }
   }
 
@@ -83,6 +90,7 @@ class AdvectionEquationSolver1d {
   int nx_;                         ///> Number of grids
   int nt_;                         ///> Number of time steps
   Writer writer_;                  ///> Data writer
+  TimestepChecker checker_;        ///> Checks timesteps to write data
   Eigen::SparseMatrix<double> D_;  ///> Differential operator
 };
 

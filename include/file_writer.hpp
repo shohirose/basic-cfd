@@ -12,10 +12,7 @@ namespace cfd {
 
 /**
  * @brief Write data to a file in a specified directory
- *
- * @tparam TimestepChecker Checks timesteps writing data to a file
  */
-template <typename TimestepChecker>
 class FileWriter {
  public:
   /**
@@ -25,44 +22,30 @@ class FileWriter {
    * @param directory Directory to output
    */
   FileWriter(const std::string& prefix, const std::filesystem::path& directory)
-      : prefix_{prefix}, directory_{directory}, checker_{} {
+      : prefix_{prefix}, directory_{directory} {
     std::filesystem::create_directory(directory);
   }
 
   /**
-   * @brief Construct a new File Writer object
-   *
-   * @param prefix File prefix
-   * @param directory Directory to output
-   * @param checker Timestep checker
-   */
-  FileWriter(const std::string& prefix, const std::filesystem::path& directory,
-             const TimestepChecker& checker)
-      : prefix_{prefix}, directory_{directory}, checker_{checker} {
-    std::filesystem::create_directory(directory);
-  }
-
-  /**
-   * @brief Print data to a file "{prefix}_{timestep}.txt"
+   * @brief Write data to a file.
    *
    * @tparam Derived
    * @param x Data
    * @param i Timestep
+   *
+   * The file name is "{prefix}{timestep}.txt".
    */
   template <typename Derived>
-  void operator()(const Eigen::MatrixBase<Derived>& x, int i) const {
+  void write(const Eigen::MatrixBase<Derived>& x, int i) const {
     namespace fs = std::filesystem;
-    if (checker_(i)) {
-      const std::string filename = fmt::format("{}_{}.txt", prefix_, i);
-      std::ofstream file(directory_ / fs::path(filename));
-      file << x << std::endl;
-    }
+    const std::string filename = fmt::format("{}{}.txt", prefix_, i);
+    std::ofstream file(directory_ / fs::path(filename));
+    file << x << std::endl;
   }
 
  private:
   std::string prefix_;               ///> Data file prefix
   std::filesystem::path directory_;  ///> Directory to output data
-  TimestepChecker checker_;          ///> Checks timestep to print
 };
 
 }  // namespace cfd
