@@ -1,6 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+import re
+
+
+def get_timestep(filename: str) -> int:
+    p = re.compile("[0-9]+$")
+    result = p.search(filename)
+    return int(result.group())
 
 
 def plot(dir: Path):
@@ -12,7 +19,7 @@ def plot(dir: Path):
         if not file.is_file():
             continue
         q = np.loadtxt(file)
-        _, n = file.stem.split("_")
+        n = get_timestep(file.stem)
         ax.plot(x, q, "o-", label=f"n={n}")
 
     ax.set_xlabel("x")
