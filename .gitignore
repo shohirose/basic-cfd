@@ -36,3 +36,6 @@ build/
 
 # Figures
 *.png
+
+# Visual Studio Code
+.vscode/
