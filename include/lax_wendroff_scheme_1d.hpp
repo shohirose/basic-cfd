@@ -26,8 +26,8 @@ class LaxWendroffScheme1d {
    * @f]
    * can be expressed by
    * @f[
-   * q_j^{n+1} = \frac{1}{2} \rho (\rho - 1) q_{j+1}^n +
-   *             (1 - \rho^2) q_j^n +
+   * q_j^{n+1} - q_j^n = \frac{1}{2} \rho (\rho - 1) q_{j+1}^n
+   *             - \rho^2 q_j^n +
    *             \frac{1}{2} \rho (\rho + 1) q_{j-1}^n
    * @f]
    * where @f$ \rho = c \Delta t / \Delta x @f$.
@@ -38,7 +38,7 @@ class LaxWendroffScheme1d {
     std::vector<triplet> coeffs;
     const auto a = dt * c / dx;
     const auto a1 = 0.5 * a * (a + 1);
-    const auto a2 = 1 - a * a;
+    const auto a2 = -a * a;
     const auto a3 = 0.5 * a * (a - 1);
     coeffs.reserve(3 * nx);
     for (int i = 1; i < nx - 1; ++i) {

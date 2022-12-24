@@ -27,8 +27,8 @@ class FirstOrderUpwindScheme1d {
    * @f]
    * can be expressed by
    * @f[
-   * q_j^{n+1} = \frac{1}{2} (| \rho | - \rho) q_{j+1}^n +
-   *             (1 - | \rho |) q_j^n +
+   * q_j^{n+1} - q_j^n = \frac{1}{2} (| \rho | - \rho) q_{j+1}^n
+   *             - | \rho | q_j^n +
    *             \frac{1}{2} (| \rho | + \rho) q_{j-1}^n
    * @f]
    * where @f$ \rho = c \Delta t / \Delta x @f$.
@@ -39,7 +39,7 @@ class FirstOrderUpwindScheme1d {
     std::vector<triplet> coeffs;
     const auto a = dt * c / dx;
     const auto a1 = 0.5 * (a + std::abs(a));
-    const auto a2 = 1 - std::abs(a);
+    const auto a2 = -std::abs(a);
     const auto a3 = -0.5 * (a - std::abs(a));
     coeffs.reserve(3 * nx);
     for (int i = 1; i < nx - 1; ++i) {

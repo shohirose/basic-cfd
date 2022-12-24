@@ -59,21 +59,15 @@ class AdvectionEquationSolver1d {
       writer_.write(q0, 0);
     }
 
-    Eigen::VectorXd q_old = q0;
-    Eigen::VectorXd q_new(nx_);
+    Eigen::VectorXd q = q0;
 
-    for (int i = 0; i < nt_; ++i) {
+    for (int i = 1; i <= nt_; ++i) {
       // Solve the equation
-      q_new = D_ * q_old;
-
-      // Copy boundary values
-      q_new.head(1) = q_old.head(1);
-      q_new.tail(1) = q_old.tail(1);
-
-      q_old = q_new;
+      const Eigen::VectorXd dq = D_ * q;
+      q += dq;
 
       if (checker_(i)) {
-        writer_.write(q_new, i + 1);
+        writer_.write(q, i);
       }
     }
   }
