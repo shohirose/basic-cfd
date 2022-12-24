@@ -13,6 +13,17 @@ namespace cfd {
 class LaxWendroffScheme1d {
  public:
   /**
+   * @brief Construct a new Lax Wendroff Scheme 1d object
+   *
+   * @param dt Delta time
+   * @param dx Distances between neighboring grid points
+   * @param c Velocity
+   * @param nx Number of grid points
+   */
+  LaxWendroffScheme1d(double dt, double dx, double c, int nx)
+      : D_{eval(dt, dx, c, nx)} {}
+
+  /**
    * @brief Compute differential operator
    *
    * @param dt Delta time
@@ -50,6 +61,14 @@ class LaxWendroffScheme1d {
     D.setFromTriplets(coeffs.begin(), coeffs.end());
     return D;
   }
+
+  template <typename Derived>
+  Eigen::VectorXd solve(const Eigen::MatrixBase<Derived>& q) const noexcept {
+    return D_ * q;
+  }
+
+ private:
+  Eigen::SparseMatrix<double> D_;
 };
 
 }  // namespace cfd

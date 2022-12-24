@@ -38,7 +38,7 @@ class AdvectionEquationSolver1d {
         nt_{nt},
         writer_{writer},
         checker_{checker},
-        D_{Scheme::eval(dt, dx, c, nx)} {}
+        scheme_{dt, dx, c, nx} {}
 
   AdvectionEquationSolver1d(const AdvectionEquationSolver1d&) = default;
   AdvectionEquationSolver1d(AdvectionEquationSolver1d&&) = default;
@@ -63,7 +63,7 @@ class AdvectionEquationSolver1d {
 
     for (int i = 1; i <= nt_; ++i) {
       // Solve the equation
-      const Eigen::VectorXd dq = D_ * q;
+      const Eigen::VectorXd dq = scheme_.solve(q);
       q += dq;
 
       if (checker_(i)) {
@@ -78,14 +78,14 @@ class AdvectionEquationSolver1d {
   int nx() const noexcept { return nx_; }
 
  private:
-  double dt_;                      ///> Delta time
-  double dx_;                      ///> Distance between neighboring grid points
-  double c_;                       ///> Advection velocity
-  int nx_;                         ///> Number of grids
-  int nt_;                         ///> Number of time steps
-  Writer writer_;                  ///> Data writer
-  TimestepChecker checker_;        ///> Checks timesteps to write data
-  Eigen::SparseMatrix<double> D_;  ///> Differential operator
+  double dt_;                ///> Delta time
+  double dx_;                ///> Distance between neighboring grid points
+  double c_;                 ///> Advection velocity
+  int nx_;                   ///> Number of grids
+  int nt_;                   ///> Number of time steps
+  Writer writer_;            ///> Data writer
+  TimestepChecker checker_;  ///> Checks timesteps to write data
+  Scheme scheme_;            ///> Discretization scheme
 };
 
 }  // namespace cfd
