@@ -26,10 +26,11 @@ def plot(dir: Path):
     ax.set_ylabel("q")
     ax.set_title(dir.stem)
     ax.legend()
-    fig.savefig(Path(f"{dir.stem}.png"))
+    fig.savefig(Path(f"results/{dir.stem}.png"))
 
 
 if __name__ == "__main__":
-    dirs = ["FTCS", "Lax", "Lax-Wendroff", "Upwind1", "Upwind2"]
+    dirs = ["FTCS", "Lax", "Lax-Wendroff",
+            "Upwind1", "Upwind2", "TVD", "MUSCL"]
     for dir in dirs:
-        plot(Path(f"build/{dir}"))
+        plot(Path(f"results/{dir}"))
