@@ -2,8 +2,10 @@
 #include "file_writer.hpp"
 #include "first_order_upwind_scheme_1d.hpp"
 #include "ftcs_scheme_1d.hpp"
+#include "harten_yee_tvd_scheme_1d.hpp"
 #include "lax_scheme_1d.hpp"
 #include "lax_wendroff_scheme_1d.hpp"
+#include "muscl_tvd_scheme_1d.hpp"
 #include "second_order_upwind_scheme_1d.hpp"
 
 namespace fs = std::filesystem;
@@ -32,6 +34,14 @@ using UpwindSolver2 =
     cfd::AdvectionEquationSolver1d<cfd::SecondOrderUpwindScheme1d,
                                    cfd::FileWriter, EvenTimestepChecker>;
 
+using HYTvdSolver =
+    cfd::AdvectionEquationSolver1d<cfd::HartenYeeTvdScheme1d, cfd::FileWriter,
+                                   EvenTimestepChecker>;
+
+using MusclTvdSolver =
+    cfd::AdvectionEquationSolver1d<cfd::MusclTvdScheme1d, cfd::FileWriter,
+                                   EvenTimestepChecker>;
+
 int main(int argc, char** argv) {
   // Parameters
   double dt = 0.05;  // Time step length
@@ -51,34 +61,50 @@ int main(int argc, char** argv) {
 
   // Solve
   {
-    FtcsSolver solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "FTCS"),
-                      EvenTimestepChecker());
-    solver.solve(q0);
+    FtcsSolver solver(cfd::FileWriter("q", "results/FTCS"),
+                      EvenTimestepChecker(), cfd::FtcsScheme1d(dt, dx, c, nx));
+    solver.solve(q0, nt);
   }
 
   {
-    LaxSolver solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Lax"),
-                     EvenTimestepChecker());
-    solver.solve(q0);
+    LaxSolver solver(cfd::FileWriter("q", "results/Lax"), EvenTimestepChecker(),
+                     cfd::LaxScheme1d(dt, dx, c, nx));
+    solver.solve(q0, nt);
   }
 
   {
-    LaxWendroffSolver solver(dt, dx, c, nx, nt,
-                             cfd::FileWriter("q", "Lax-Wendroff"),
-                             EvenTimestepChecker());
-    solver.solve(q0);
+    LaxWendroffSolver solver(cfd::FileWriter("q", "results/Lax-Wendroff"),
+                             EvenTimestepChecker(),
+                             cfd::LaxWendroffScheme1d(dt, dx, c, nx));
+    solver.solve(q0, nt);
   }
 
   {
-    UpwindSolver1 solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Upwind1"),
-                         EvenTimestepChecker());
-    solver.solve(q0);
+    UpwindSolver1 solver(cfd::FileWriter("q", "results/Upwind1"),
+                         EvenTimestepChecker(),
+                         cfd::FirstOrderUpwindScheme1d(dt, dx, c, nx));
+    solver.solve(q0, nt);
   }
 
   {
-    UpwindSolver2 solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Upwind2"),
-                         EvenTimestepChecker());
-    solver.solve(q0);
+    UpwindSolver2 solver(cfd::FileWriter("q", "results/Upwind2"),
+                         EvenTimestepChecker(),
+                         cfd::SecondOrderUpwindScheme1d(dt, dx, c, nx));
+    solver.solve(q0, nt);
+  }
+
+  {
+    HYTvdSolver solver(cfd::FileWriter("q", "results/TVD"),
+                       EvenTimestepChecker(),
+                       cfd::HartenYeeTvdScheme1d(dt, dx, c, nx));
+    solver.solve(q0, nt);
+  }
+
+  {
+    MusclTvdSolver solver(cfd::FileWriter("q", "results/MUSCL"),
+                          EvenTimestepChecker(),
+                          cfd::MusclTvdScheme1d(dt, dx, c, nx, 1, 1.0 / 3.0));
+    solver.solve(q0, nt);
   }
 
   return EXIT_SUCCESS;
