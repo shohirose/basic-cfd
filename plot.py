@@ -14,7 +14,7 @@ def plot(dir: Path):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    x = np.linspace(-1, 1, 21)
+    x = np.linspace(0, 2, 21)
     for file in dir.iterdir():
         if not file.is_file():
             continue
@@ -30,6 +30,6 @@ def plot(dir: Path):
 
 
 if __name__ == "__main__":
-    dirs = ["FTCS", "Lax", "Lax-Wendroff", "Upwind"]
+    dirs = ["FTCS", "Lax", "Lax-Wendroff", "Upwind1", "Upwind2"]
     for dir in dirs:
         plot(Path(f"build/{dir}"))
