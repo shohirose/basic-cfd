@@ -8,10 +8,10 @@
 namespace cfd {
 
 /**
- * @brief Upwind scheme
+ * @brief 1st order upwind scheme
  *
  */
-class UpwindScheme1d {
+class FirstOrderUpwindScheme1d {
  public:
   /**
    * @brief Compute differential operator
@@ -21,7 +21,7 @@ class UpwindScheme1d {
    * @param c Velocity
    * @param nx Number of grid points
    *
-   * Upwind scheme for 1-D advection equation
+   * 1st order upwind scheme for 1-D advection equation
    * @f[
    * \frac{\partial q}{\partial t} + c \frac{\partial q}{\partial x} = 0
    * @f]
@@ -38,7 +38,6 @@ class UpwindScheme1d {
     using triplet = Eigen::Triplet<double>;
     std::vector<triplet> coeffs;
     const auto a = dt * c / dx;
-    const auto abs_a = std::abs(a);
     const auto a1 = 0.5 * (a + std::abs(a));
     const auto a2 = 1 - std::abs(a);
     const auto a3 = -0.5 * (a - std::abs(a));

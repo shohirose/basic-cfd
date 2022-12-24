@@ -1,9 +1,9 @@
 #include "advection_equation_solver_1d.hpp"
 #include "file_writer.hpp"
+#include "first_order_upwind_scheme_1d.hpp"
 #include "ftcs_scheme_1d.hpp"
 #include "lax_scheme_1d.hpp"
 #include "lax_wendroff_scheme_1d.hpp"
-#include "upwind_scheme_1d.hpp"
 
 namespace fs = std::filesystem;
 
@@ -24,8 +24,8 @@ using LaxWendroffSolver =
                                    EvenTimestepChecker>;
 
 using UpwindSolver =
-    cfd::AdvectionEquationSolver1d<cfd::UpwindScheme1d, cfd::FileWriter,
-                                   EvenTimestepChecker>;
+    cfd::AdvectionEquationSolver1d<cfd::FirstOrderUpwindScheme1d,
+                                   cfd::FileWriter, EvenTimestepChecker>;
 
 int main(int argc, char** argv) {
   // Parameters
