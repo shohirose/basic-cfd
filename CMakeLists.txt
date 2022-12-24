@@ -26,6 +26,7 @@ add_library(cfd
     include/lax_scheme_1d.hpp
     include/lax_wendroff_scheme_1d.hpp
     include/first_order_upwind_scheme_1d.hpp
+    include/second_order_upwind_scheme_1d.hpp
     include/advection_equation_solver_1d.hpp
     include/file_writer.hpp
   )

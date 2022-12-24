@@ -4,6 +4,7 @@
 #include "ftcs_scheme_1d.hpp"
 #include "lax_scheme_1d.hpp"
 #include "lax_wendroff_scheme_1d.hpp"
+#include "second_order_upwind_scheme_1d.hpp"
 
 namespace fs = std::filesystem;
 
@@ -23,8 +24,12 @@ using LaxWendroffSolver =
     cfd::AdvectionEquationSolver1d<cfd::LaxWendroffScheme1d, cfd::FileWriter,
                                    EvenTimestepChecker>;
 
-using UpwindSolver =
+using UpwindSolver1 =
     cfd::AdvectionEquationSolver1d<cfd::FirstOrderUpwindScheme1d,
+                                   cfd::FileWriter, EvenTimestepChecker>;
+
+using UpwindSolver2 =
+    cfd::AdvectionEquationSolver1d<cfd::SecondOrderUpwindScheme1d,
                                    cfd::FileWriter, EvenTimestepChecker>;
 
 int main(int argc, char** argv) {
@@ -37,10 +42,10 @@ int main(int argc, char** argv) {
 
   // Initial condition
   Eigen::VectorXd q0(nx);
-  for (int i = 0; i < nx / 2; ++i) {
+  for (int i = 0; i <= nx / 2; ++i) {
     q0[i] = 1;
   }
-  for (int i = nx / 2; i < nx; ++i) {
+  for (int i = nx / 2 + 1; i < nx; ++i) {
     q0[i] = 0;
   }
 
@@ -65,8 +70,14 @@ int main(int argc, char** argv) {
   }
 
   {
-    UpwindSolver solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Upwind"),
-                        EvenTimestepChecker());
+    UpwindSolver1 solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Upwind1"),
+                         EvenTimestepChecker());
+    solver.solve(q0);
+  }
+
+  {
+    UpwindSolver2 solver(dt, dx, c, nx, nt, cfd::FileWriter("q", "Upwind2"),
+                         EvenTimestepChecker());
     solver.solve(q0);
   }
 
