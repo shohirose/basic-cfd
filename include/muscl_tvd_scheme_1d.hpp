@@ -46,8 +46,8 @@ class MusclTvdScheme1d {
     const auto c2 = c_ + std::abs(c_);
 
     // Boundary conditions are not implemented yet.
-    dq.segment(2, n) = -dt_ / dx_ *
-                       (0.5 * (c1 * qr.segment(3, n) + c2 * ql.segment(2, n)) -
+    dq.segment(2, n) =
+        -(dt_ / dx_) * (0.5 * (c1 * qr.segment(3, n) + c2 * ql.segment(2, n)) -
                         0.5 * (c1 * qr.segment(2, n) + c2 * ql.segment(1, n)));
     return dq;
   }
