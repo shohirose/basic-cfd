@@ -15,8 +15,11 @@ class MusclTvdScheme1d {
    * @param dx Grid length
    * @param c Velocity
    * @param nx Number of grids
-   * @param epsilon @f$ \epsilon @f$ for MUSCL TVD scheme
-   * @param kappa @f$ \kappa @f$ for MUSCL TVD scheme
+   * @param epsilon Epsilon = 0 for 1st order, Epsilon = 1 for higher order
+   * @param kappa Kappa = -1 for 2nd order fully upwind,
+   * Kappa = 0 for 2nd order upwind biased,
+   * Kappa = 1 for average of two neighbor points,
+   * Kappa = 1/3 for 3rd order upwind
    */
   MusclTvdScheme1d(double dt, double dx, double c, int nx, double epsilon,
                    double kappa)
@@ -30,43 +33,22 @@ class MusclTvdScheme1d {
 
   template <typename Derived>
   Eigen::VectorXd solve(const Eigen::MatrixBase<Derived>& q) const noexcept {
-    // const Eigen::VectorXd delta = q.tail(nx_ - 1) - q.head(nx_ - 1);
-    // const Eigen::VectorXd delta_p = calc_delta_p(delta, b_);
-    // const Eigen::VectorXd delta_m = calc_delta_m(delta, b_);
-    // const Eigen::VectorXd qr = calc_qr(q, delta_p, delta_m, epsilon_,
-    // kappa_); const Eigen::VectorXd ql = calc_ql(q, delta_p, delta_m,
-    // epsilon_, kappa_);
+    using Eigen::VectorXd;
+    const VectorXd delta = q.tail(nx_ - 1) - q.head(nx_ - 1);
+    const VectorXd delta_p = calc_delta_p(delta, b_);
+    const VectorXd delta_m = calc_delta_m(delta, b_);
+    const VectorXd qr = calc_qr(q, delta_p, delta_m, epsilon_, kappa_);
+    const VectorXd ql = calc_ql(q, delta_p, delta_m, epsilon_, kappa_);
 
-    Eigen::VectorXd dq = Eigen::VectorXd::Zero(nx_);
-    for (int i = 2; i < nx_ - 2; ++i) {
-      // const auto f_p =
-      //     0.5 * (c_ * (qr(i + 1) + ql(i)) - std::abs(c_) * (qr(i + 1) -
-      //     ql(i)));
-      // const auto f_m =
-      //     0.5 * (c_ * (qr(i) + ql(i - 1)) - std::abs(c_) * (qr(i) - ql(i -
-      //     1)));
-      const auto delta_pp = q(i + 2) - q(i + 1);
-      const auto delta_p = q(i + 1) - q(i);
-      const auto delta_m = q(i) - q(i - 1);
-      const auto delta_mm = q(i - 1) - q(i - 2);
-      const auto dp1 = minmod(delta_p, b_ * delta_m);
-      const auto dm1 = minmod(delta_m, b_ * delta_p);
-      const auto qlp =
-          q(i) + 0.25 * epsilon_ * ((1 - kappa_) * dm1 + (1 + kappa_) * dp1);
-      const auto dp2 = minmod(delta_pp, b_ * delta_p);
-      const auto dm2 = minmod(delta_p, b_ * delta_pp);
-      const auto qrp = q(i + 1) - 0.25 * epsilon_ *
-                                      ((1 - kappa_) * dp2 + (1 + kappa_) * dm2);
-      const auto fp = 0.5 * (c_ * (qrp + qlp) - std::abs(c_) * (qrp - qlp));
-      const auto dp3 = minmod(delta_m, b_ * delta_mm);
-      const auto dm3 = minmod(delta_mm, b_ * delta_m);
-      const auto qlm = q(i - 1) + 0.25 * epsilon_ *
-                                      ((1 - kappa_) * dm3 + (1 + kappa_) * dp3);
-      const auto qrm =
-          q(i) - 0.25 * epsilon_ * ((1 - kappa_) * dp1 + (1 + kappa_) * dm1);
-      const auto fm = 0.5 * (c_ * (qrm + qlm) - std::abs(c_) * (qrm - qlm));
-      dq(i) = -dt_ / dx_ * (fp - fm);
-    }
+    VectorXd dq = VectorXd::Zero(nx_);
+    const auto n = nx_ - 4;
+    const auto c1 = c_ - std::abs(c_);
+    const auto c2 = c_ + std::abs(c_);
+
+    // Boundary conditions are not implemented yet.
+    dq.segment(2, n) = -dt_ / dx_ *
+                       (0.5 * (c1 * qr.segment(3, n) + c2 * ql.segment(2, n)) -
+                        0.5 * (c1 * qr.segment(2, n) + c2 * ql.segment(1, n)));
     return dq;
   }
 
@@ -82,18 +64,20 @@ class MusclTvdScheme1d {
 
   static Eigen::VectorXd calc_delta_p(const Eigen::VectorXd& delta,
                                       double b) noexcept {
-    Eigen::VectorXd delta_p(delta.size() - 1);
-    for (int i = 0; i < delta_p.size(); ++i) {
-      delta_p(i) = minmod(delta(i + 1), b * delta(i));
+    using Eigen::VectorXd;
+    VectorXd delta_p = VectorXd::Zero(delta.size() + 1);
+    for (int i = 1; i < delta.size(); ++i) {
+      delta_p(i) = minmod(delta(i), b * delta(i - 1));
     }
     return delta_p;
   }
 
   static Eigen::VectorXd calc_delta_m(const Eigen::VectorXd& delta,
                                       double b) noexcept {
-    Eigen::VectorXd delta_m(delta.size() - 1);
-    for (int i = 0; i < delta_m.size(); ++i) {
-      delta_m(i) = minmod(delta(i), b * delta(i + 1));
+    using Eigen::VectorXd;
+    VectorXd delta_m = VectorXd::Zero(delta.size() + 1);
+    for (int i = 1; i < delta.size(); ++i) {
+      delta_m(i) = minmod(delta(i - 1), b * delta(i));
     }
     return delta_m;
   }
@@ -103,7 +87,7 @@ class MusclTvdScheme1d {
                                  const Eigen::VectorXd& delta_p,
                                  const Eigen::VectorXd& delta_m, double epsilon,
                                  double kappa) noexcept {
-    return q.segment(1, delta_p.size()) -
+    return q -
            (0.25 * epsilon) * ((1 - kappa) * delta_p + (1 + kappa) * delta_m);
   }
 
@@ -112,7 +96,7 @@ class MusclTvdScheme1d {
                                  const Eigen::VectorXd& delta_p,
                                  const Eigen::VectorXd& delta_m, double epsilon,
                                  double kappa) noexcept {
-    return q.segment(1, delta_p.size()) +
+    return q +
            (0.25 * epsilon) * ((1 - kappa) * delta_m + (1 + kappa) * delta_p);
   }
 
