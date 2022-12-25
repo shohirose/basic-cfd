@@ -15,11 +15,11 @@ class MusclTvdScheme1d {
    * @param dx Grid length
    * @param c Velocity
    * @param nx Number of grids
-   * @param epsilon Epsilon = 0 for 1st order, Epsilon = 1 for higher order
+   * @param epsilon Epsilon = 0 for 1st order, epsilon = 1 for higher order
    * @param kappa Kappa = -1 for 2nd order fully upwind,
-   * Kappa = 0 for 2nd order upwind biased,
-   * Kappa = 1 for average of two neighbor points,
-   * Kappa = 1/3 for 3rd order upwind
+   * kappa = 0 for 2nd order upwind biased,
+   * kappa = 1 for average of two neighbor points,
+   * kappa = 1/3 for 3rd order upwind
    */
   MusclTvdScheme1d(double dt, double dx, double c, int nx, double epsilon,
                    double kappa)

@@ -15,8 +15,8 @@ is solved by using the finie difference method. Currently, the following discret
 - Lax-Wendroff scheme
 - 1st order upwind scheme
 - 2nd order upwind scheme
-- Harten-Yee non-MUSCL TVD scheme
-- MUSCL TVD scheme with minmod limiter
+- Harten-Yee non-MUSCL TVD scheme (2nd order)
+- MUSCL TVD scheme with minmod limiter (3rd order)
 
 Please refer to [1] for the details of each scheme.
 
