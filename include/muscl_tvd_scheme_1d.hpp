@@ -30,19 +30,42 @@ class MusclTvdScheme1d {
 
   template <typename Derived>
   Eigen::VectorXd solve(const Eigen::MatrixBase<Derived>& q) const noexcept {
-    const Eigen::VectorXd delta = q.tail(nx_ - 1) - q.head(nx_ - 1);
-    const Eigen::VectorXd delta_p = calc_delta_p(delta, b_);
-    const Eigen::VectorXd delta_m = calc_delta_m(delta, b_);
-    const Eigen::VectorXd qr = calc_qr(q, delta_p, delta_m, epsilon_, kappa_);
-    const Eigen::VectorXd ql = calc_ql(q, delta_p, delta_m, epsilon_, kappa_);
+    // const Eigen::VectorXd delta = q.tail(nx_ - 1) - q.head(nx_ - 1);
+    // const Eigen::VectorXd delta_p = calc_delta_p(delta, b_);
+    // const Eigen::VectorXd delta_m = calc_delta_m(delta, b_);
+    // const Eigen::VectorXd qr = calc_qr(q, delta_p, delta_m, epsilon_,
+    // kappa_); const Eigen::VectorXd ql = calc_ql(q, delta_p, delta_m,
+    // epsilon_, kappa_);
 
     Eigen::VectorXd dq = Eigen::VectorXd::Zero(nx_);
     for (int i = 2; i < nx_ - 2; ++i) {
-      const auto f_p =
-          0.5 * (c_ * (qr(i + 1) + ql(i)) - std::abs(c_) * (qr(i + 1) - ql(i)));
-      const auto f_m =
-          0.5 * (c_ * (qr(i) + ql(i - 1)) - std::abs(c_) * (qr(i) - ql(i - 1)));
-      dq(i) = -dt_ / dx_ * (f_p - f_m);
+      // const auto f_p =
+      //     0.5 * (c_ * (qr(i + 1) + ql(i)) - std::abs(c_) * (qr(i + 1) -
+      //     ql(i)));
+      // const auto f_m =
+      //     0.5 * (c_ * (qr(i) + ql(i - 1)) - std::abs(c_) * (qr(i) - ql(i -
+      //     1)));
+      const auto delta_pp = q(i + 2) - q(i + 1);
+      const auto delta_p = q(i + 1) - q(i);
+      const auto delta_m = q(i) - q(i - 1);
+      const auto delta_mm = q(i - 1) - q(i - 2);
+      const auto dp1 = minmod(delta_p, b_ * delta_m);
+      const auto dm1 = minmod(delta_m, b_ * delta_p);
+      const auto qlp =
+          q(i) + 0.25 * epsilon_ * ((1 - kappa_) * dm1 + (1 + kappa_) * dp1);
+      const auto dp2 = minmod(delta_pp, b_ * delta_p);
+      const auto dm2 = minmod(delta_p, b_ * delta_pp);
+      const auto qrp = q(i + 1) - 0.25 * epsilon_ *
+                                      ((1 - kappa_) * dp2 + (1 + kappa_) * dm2);
+      const auto fp = 0.5 * (c_ * (qrp + qlp) - std::abs(c_) * (qrp - qlp));
+      const auto dp3 = minmod(delta_m, b_ * delta_mm);
+      const auto dm3 = minmod(delta_mm, b_ * delta_m);
+      const auto qlm = q(i - 1) + 0.25 * epsilon_ *
+                                      ((1 - kappa_) * dm3 + (1 + kappa_) * dp3);
+      const auto qrm =
+          q(i) - 0.25 * epsilon_ * ((1 - kappa_) * dp1 + (1 + kappa_) * dm1);
+      const auto fm = 0.5 * (c_ * (qrm + qlm) - std::abs(c_) * (qrm - qlm));
+      dq(i) = -dt_ / dx_ * (fp - fm);
     }
     return dq;
   }
