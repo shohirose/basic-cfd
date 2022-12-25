@@ -13,17 +13,19 @@ class HartenYeeTvdScheme1d {
 
   template <typename Derived>
   Eigen::VectorXd solve(const Eigen::MatrixBase<Derived>& q) const noexcept {
-    const Eigen::VectorXd delta = q.tail(nx_ - 1) - q.head(nx_ - 1);
-    const Eigen::VectorXd g = calc_g(delta);
-    const Eigen::VectorXd gamma = calc_gamma(g, delta, sigma_);
-    const Eigen::VectorXd phi = calc_phi(g, delta, gamma, sigma_, c_);
+    using Eigen::VectorXd;
+    const VectorXd delta = q.tail(nx_ - 1) - q.head(nx_ - 1);
+    const VectorXd g = calc_g(delta);
+    const VectorXd gamma = calc_gamma(g, delta, sigma_);
+    const VectorXd phi = calc_phi(g, delta, gamma, sigma_, c_);
 
-    Eigen::VectorXd dq = Eigen::VectorXd::Zero(nx_);
-    for (int i = 1; i < nx_ - 1; ++i) {
-      const auto f_up = c_ * (q(i + 1) + q(i)) + phi(i);
-      const auto f_down = c_ * (q(i) + q(i - 1)) + phi(i - 1);
-      dq(i) = -0.5 * dt_ / dx_ * (f_up - f_down);
-    }
+    VectorXd dq = VectorXd::Zero(nx_);
+    const auto n = nx_ - 2;
+    // Boundary conditions are not implemented yet.
+    dq.segment(1, n) =
+        -(0.5 * dt_ / dx_) *
+        ((c_ * (q.segment(2, n) + q.segment(1, n)) + phi.segment(1, n)) -
+         (c_ * (q.segment(1, n) + q.head(n)) + phi.head(n)));
     return dq;
   }
 
@@ -38,9 +40,9 @@ class HartenYeeTvdScheme1d {
   }
 
   static Eigen::VectorXd calc_g(const Eigen::VectorXd& delta) noexcept {
-    const auto nx = delta.size() + 1;
-    Eigen::VectorXd g = Eigen::VectorXd::Zero(nx);
-    for (int i = 1; i < nx - 1; ++i) {
+    using Eigen::VectorXd;
+    VectorXd g = VectorXd::Zero(delta.size() + 1);
+    for (int i = 1; i < delta.size(); ++i) {
       g(i) = minmod(delta(i), delta(i - 1));
     }
     return g;
@@ -49,25 +51,20 @@ class HartenYeeTvdScheme1d {
   static Eigen::VectorXd calc_gamma(const Eigen::VectorXd& g,
                                     const Eigen::VectorXd& delta,
                                     double sigma) noexcept {
-    const auto nx = g.size();
-    Eigen::VectorXd gamma(nx - 1);
-    for (int i = 0; i < nx - 1; ++i) {
-      gamma(i) =
-          sigma * (g(i + 1) - g(i)) * delta(i) / (delta(i) * delta(i) + 1e-12);
-    }
-    return gamma;
+    const auto n = delta.size();
+    return sigma * ((g.segment(1, n) - g.head(n)).array() * delta.array() /
+                    (delta.array().square() + 1e-12))
+                       .matrix();
   }
 
   static Eigen::VectorXd calc_phi(const Eigen::VectorXd& g,
                                   const Eigen::VectorXd& delta,
                                   const Eigen::VectorXd& gamma, double sigma,
                                   double c) noexcept {
-    const auto nx = g.size();
-    Eigen::VectorXd phi(nx - 1);
-    for (int i = 0; i < nx - 1; ++i) {
-      phi(i) = sigma * (g(i) + g(i + 1)) - std::abs(c + gamma(i)) * delta(i);
-    }
-    return phi;
+    const auto n = delta.size();
+    return (sigma * (g.head(n) + g.segment(1, n)).array() -
+            (c + gamma.array()).abs() * delta.array())
+        .matrix();
   }
 
  private:
