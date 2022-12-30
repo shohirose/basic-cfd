@@ -44,8 +44,8 @@ target_compile_options(cfd
     $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Wpedantic>
     $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -Wpedantic>
     $<$<CXX_COMPILER_ID:MSVC>:/W3>
-    $<$<CXX_COMPILER_ID:Intel>:$<IF:<$PLATFORM_ID:Windows>,/W3,-w3>>
-    $<$<CXX_COMPILER_ID:IntelLLVM>:$<IF:<$PLATFORM_ID:Windows>,/W3,-w3>>
+    $<$<CXX_COMPILER_ID:Intel>:$<IF:$<PLATFORM_ID:Windows>,/W3,-w3>>
+    $<$<CXX_COMPILER_ID:IntelLLVM>:$<IF:$<PLATFORM_ID:Windows>,/W3,-w3>>
   )
 
 add_executable(advection_1d src/advection_1d.cpp)
