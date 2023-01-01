@@ -5,7 +5,7 @@ Problems are taken from [1].
 1-D scalar advection equation with constant velocity
 
 $$
-\frac{\partial q}{\partial t} + c \frac{\partial q}{\partial x} = 0
+\frac{\partial u}{\partial t} + c \frac{\partial u}{\partial x} = 0
 $$
 
 is solved by using the finie difference method. Currently, the following discretization schemes are implemented:
